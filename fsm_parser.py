@@ -25,7 +25,8 @@
 # check these pages for useof  state machine UML
 #    * https://en.wikipedia.org/wiki/UML_state_machine#Guard_conditions
 #    * https://sparxsystems.com/resources/tutorials/uml2/state-diagram.html
-# runn on all *.fsm files
+#
+# run on all *.fsm files
 # find . -type f -name "*.fsm" -exec python3 fsm_parser.py --fsmFile {} -a \;
 
 import re, subprocess, os, json, argparse, copy
@@ -307,8 +308,6 @@ outputFile = inputFile.replace(".fsm", ".plantuml")
 if args.verbose: print(f"Writing to file {outputFile}")
 with open(outputFile, "w") as plantUmlFile:
 	plantUmlFile.write("@startuml\n")
-#	plantUmlFile.write(f"[*] --> {state_list[0]['defaultTransition']['nextState']}\n")
-#	plantUmlFile.write(exportStates(state_list[0]['childStateList']))
 	plantUmlFile.write(exportStates(state_list))
 	plantUmlFile.write("@enduml")
 	plantUmlFile.close()
