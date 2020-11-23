@@ -1,0 +1,44 @@
+@startuml
+state TOPLEVEL {
+   state Startup {
+      Startup : entry / entryStartup()
+      Startup : exit / exitStartup()
+      Startup --> Shutdown : evRequestShutdown / setTriggerShutdown
+      Startup --> Restart : evRequestRestart / setTriggerRestart
+   }
+
+   state Shutdown {
+      Shutdown : entry / entryShutdown()
+      Shutdown : exit / exitShutdown()
+      Shutdown --> Startup : evStartup
+   }
+
+   state Restart {
+      Restart : entry / entryRestart()
+      Restart : exit / exitRestart()
+   }
+
+   state ErrorState {
+      state ErrorState1 {
+         ErrorState1 : entry / entryErrorState1()
+         ErrorState1 : exit / exitErrorState1()
+      }
+
+      state ErrorState2 {
+         ErrorState2 : entry / entryErrorState2()
+         ErrorState2 : exit / exitErrorState2()
+      }
+
+      [*] --> ErrorState1
+      ErrorState : entry / entryErrorState()
+      ErrorState : exit / exitErrorState()
+   }
+
+   [*] --> Startup
+   TOPLEVEL --> ErrorState1 : evStateFailed[firstError] / setFirstErrorOccured
+   TOPLEVEL : evStateInvalid[firstError] / setFirstErrorOccured()
+   TOPLEVEL --> ErrorState2 : evStateFailed[notFirstError] / setSecondErrorOccured
+   TOPLEVEL : evStateInvalid[notFirstError] / setSecondErrorOccured()
+}
+
+@enduml

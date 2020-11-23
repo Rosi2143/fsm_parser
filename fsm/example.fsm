@@ -1,0 +1,98 @@
+// MIT License
+// 
+// Copyright (c) 2020 Michael Roßner
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
+// FSMName must be lower case since CC naming convention for files do not allow CamelCase
+FSMName fsmmachinestate 
+Context contextmachinestate
+Initial TOPLEVEL {}
+Version Example MachineState state machine version 1.2
+{
+    (TOPLEVEL)
+    [
+        Default     Startup     {}
+    ]
+    {
+        //<event>                   <NextState>  <guard>          <event> <action>
+        evStateFailed               ErrorState1  {firstError}     {}      {setFirstErrorOccured}
+        evStateInvalid              *            {firstError}     {}      {setFirstErrorOccured}
+        evStateFailed               ErrorState2  {notFirstError}  {}      {setSecondErrorOccured}
+        evStateInvalid              *            {notFirstError}  {}      {setSecondErrorOccured}
+    }
+
+    Startup : TOPLEVEL
+    [
+        entry     entryStartup
+        exit      exitStartup
+    ]
+    {
+        //<event>                   <NextState> <guard> <event> <action>
+        evRequestShutdown           Shutdown    {}      {}      {setTriggerShutdown}
+        evRequestRestart            Restart     {}      {}      {setTriggerRestart}
+    }
+
+    Shutdown : TOPLEVEL
+    [
+        entry     entryShutdown
+        exit      exitShutdown
+    ]
+    {
+        //<event>               <NextState> <guard> <event> <action>
+        evStartup               Startup     {}      {}      {}
+    }
+
+    Restart : TOPLEVEL
+    [
+        entry     entryRestart
+        exit      exitRestart
+    ]
+    {
+        //<event>               <NextState> <guard> <event> <action>
+    }
+
+    ErrorState : TOPLEVEL
+    [
+        entry     entryErrorState
+        exit      exitErrorState
+        Default   ErrorState1       {}
+    ]
+    {
+        //<event>               <NextState> <guard> <event> <action>
+    }
+
+    ErrorState1 : ErrorState
+    [
+        entry     entryErrorState1
+        exit      exitErrorState1
+    ]
+    {
+        //<event>               <NextState> <guard> <event> <action>
+    }
+
+    ErrorState2 : ErrorState
+    [
+        entry     entryErrorState2
+        exit      exitErrorState2
+    ]
+    {
+        //<event>               <NextState> <guard> <event> <action>
+    }
+}
