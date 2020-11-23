@@ -138,6 +138,33 @@ def exportStates(node, indent_depth = 0):
 		ret_state += indent_string * indent_depth + "}\n\n"
 	return ret_state
 
+# thanks to https://stackoverflow.com/questions/377017/test-if-executable-exists-in-python
+def which(program):
+    import os
+    def is_exe(fpath):
+        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+
+    fpath, fname = os.path.split(program)
+    if fpath:
+        if is_exe(program):
+            return program
+    else:
+        for path in os.environ["PATH"].split(os.pathsep):
+            exe_file = os.path.join(path, program)
+            if is_exe(exe_file):
+                return exe_file
+
+    return None
+
+if not which("plantuml"):
+    print("Program plantuml does not exist. Please install it.\nSee https://plantuml.com/download")
+    quit(1)
+
+if not subprocess.check_output("plantuml -testdot", stderr=subprocess.STDOUT, shell=True):
+    print("Program plantuml cannot find 'dot'. Please install it.")
+    quit(1)
+
+
 inputFile = args.fsmFile[0]
 with open(inputFile, "r") as fsmFile:
 	line = fsmFile.readline()
