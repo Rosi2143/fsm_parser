@@ -35,21 +35,23 @@ fsmName = "none"
 context = "none"
 initial = "none"
 version = "none"
-newState={
-		 'parentState'        : "",
-		 'stateName'          : "",
-		 'entryFunction'      : [],
-		 'exitFunction'       : [],
-		 'defaultTransition'  : {},
-		 'transitionList'     : [],
-		 'childStateList'     : []
-		}
+
 newTransition={
 		  'event'             : "",
 		  'nextState'         : "",
-		  'guards'            : [],
-		  'eventsSend'        : [],
-		  'actions'           : []
+		  'guardList'         : [],
+		  'eventsSendList'    : [],
+		  'actionList'        : []
+		}
+
+newState={
+		 'parentState'        : "",
+		 'stateName'          : "",
+		 'entryFunctionList'  : [],
+		 'exitFunctionList'   : [],
+		 'defaultTransition'  : {},
+		 'transitionList'     : [],
+		 'childStateList'     : []
 		}
 
 insideActionBlock = False
@@ -113,13 +115,13 @@ def exportStates(node, indent_depth = 0):
 			ret_state += indent_string * (indent_depth + 1) + "[*] --> " + state['defaultTransition']['nextState'] + "\n"
 
 		if (args.showEntryExitActions or args.showAll):  
-			if state['entryFunction']:
-				for entryFunction in state['entryFunction']:
+			if state['entryFunctionList']:
+				for entryFunction in state['entryFunctionList']:
 					if args.verbose: print("\tentry Function = ", entryFunction)
 					ret_state += indent_string * (indent_depth + 1) + state['stateName'] + " : entry / " + entryFunction + "()\n"
 
-			if state['exitFunction']:
-				for exitFunction in state['exitFunction']:
+			if state['exitFunctionList']:
+				for exitFunction in state['exitFunctionList']:
 					if args.verbose: print("\texit Function = ", exitFunction)
 					ret_state += indent_string * (indent_depth + 1) + state['stateName'] + " : exit / " + exitFunction + "()\n"
 
@@ -131,11 +133,11 @@ def exportStates(node, indent_depth = 0):
 				else:
 					if args.verbose: print("\texporting internal transition = ", transition['event'])
 					ret_state += indent_string * (indent_depth + 1) + state['stateName'] + " : " + transition['event']
-				if transition['guards'] and (args.showGuards or args.showAll):
-					ret_state += "[" + ' '.join(transition['guards']) + "]"
+				if transition['guardList'] and (args.showGuards or args.showAll):
+					ret_state += "[" + ' '.join(transition['guardList']) + "]"
 
-				if transition['actions'] and (args.showTransitionActions or args.showAll):
-					ret_state += " / " + ' '.join(transition['actions'])
+				if transition['actionList'] and (args.showTransitionActions or args.showAll):
+					ret_state += " / " + ' '.join(transition['actionList'])
 
 				ret_state += "\n"
 
@@ -243,18 +245,18 @@ with open(inputFile, "r") as fsmFile:
 			if reg:
 				entryFunction = reg.group(1)
 				if args.verbose: print("entryFunction = ", entryFunction)
-				currentState['entryFunction'].append(entryFunction)
+				currentState['entryFunctionList'].append(entryFunction)
 			reg = re.search("^\s*exit\s+(\w+)", line)
 			if reg:
 				exitFunction = reg.group(1)
 				if args.verbose: print("exitFunction = ", exitFunction)
-				currentState['exitFunction'].append(exitFunction)
+				currentState['exitFunctionList'].append(exitFunction)
 			reg = re.search("^\s*Default\s+(\w+)\s+\{([\w\s]*)\}", line, re.IGNORECASE)
 			if reg:
 				defaultTransition = copy.deepcopy(newTransition)
 				defaultTransition['nextState'] = reg.group(1)
-				defaultTransition['actions'] = reg.group(2).split()
-				defaultTransition['actions'] = ["{}()".format(element) for element in defaultTransition['actions'] ]
+				defaultTransition['actionList'] = reg.group(2).split()
+				defaultTransition['actionList'] = ["{}()".format(element) for element in defaultTransition['actionList'] ]
 				if args.verbose: print("defaultTransition = ", defaultTransition)
 				currentState['defaultTransition'] = defaultTransition
 
@@ -281,23 +283,22 @@ with open(inputFile, "r") as fsmFile:
 			reg = re.search("^\s*(\w*)\s+\*\s+\{([\w\s]*)\}\s+\{([\w\s]*)\}\s+\{([\w\s]*)\}", line)
 			if reg:
 				selfTransition = copy.deepcopy(newTransition)
-				selfTransition['event']      = reg.group(1)
-				selfTransition['nextState']  = None
-				selfTransition['guards']     = reg.group(2).split()
-				selfTransition['eventsSend'] = reg.group(3).split()
-				selfTransition['actions']    = reg.group(4).split()
-				selfTransition['actions'] = ["{}()".format(element) for element in selfTransition['actions'] ]
+				selfTransition['event']     	 = reg.group(1)
+				selfTransition['nextState'] 	 = None
+				selfTransition['guardList']      = reg.group(2).split()
+				selfTransition['eventsSendList'] = reg.group(3).split()
+				selfTransition['actionList']	 = ["{}()".format(element) for element in selfTransition['actionList'] ]
 				if args.verbose: print("selfTransition = ", selfTransition)
 				currentState['transitionList'].append(selfTransition)
 			reg = re.search("^\s*(\w*)\s+(\w+)\s+\{([\w\s]*)\}\s+\{([\w\s]*)\}\s+\{([\w\s]*)\}", line)
 
 			if reg:
 				Transition = copy.deepcopy(newTransition)
-				Transition['event']      = reg.group(1)
-				Transition['nextState']  = reg.group(2)
-				Transition['guards']     = reg.group(3).split()
-				Transition['eventsSend'] = reg.group(4).split()
-				Transition['actions']    = reg.group(5).split()
+				Transition['event']          = reg.group(1)
+				Transition['nextState']  	 = reg.group(2)
+				Transition['guardList']      = reg.group(3).split()
+				Transition['eventsSendList'] = reg.group(4).split()
+				Transition['actionList']     = reg.group(5).split()
 				if args.verbose: print("Transition = ", Transition)
 				currentState['transitionList'].append(Transition)
 	fsmFile.close()
