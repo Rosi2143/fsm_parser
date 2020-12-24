@@ -29,9 +29,12 @@
 # run on all *.fsm files
 # find . -type f -name "*.fsm" -exec python3 fsm_parser.py --fsmFile {} -a \;
 
-import re, subprocess, os, json, argparse, copy, shutil
+import re, subprocess, os, json, argparse, copy, shutil , inspect, sys
 from typing_extensions import TypedDict
+from datetime import datetime
 from typing import *
+
+scriptVersion = "2.1"
 
 fsmName = "none"
 context = "none"
@@ -78,7 +81,7 @@ inputFile  = ""
 outputFile = ""
 
 parser = argparse.ArgumentParser(prog='fsm_parser', description="parses SMC description files and generates PlantUML files.", epilog="Requirements: * plantuml via 'sudo apt-get install plantuml'")
-parser.add_argument("--version", action='version', version='%(prog)s 2.0')
+parser.add_argument("--version", action='version', version='%(prog)s ' + scriptVersion)
 parser.add_argument("-v", "--verbose", help="activates debug output", action="store_true")
 parser.add_argument("-f", "--fsmFile", nargs=1, action='store', type=str, help="path to fsm-file")
 parser.add_argument("-a", "--showAll", help="show all element in PlantUML == -e -g -t", action="store_true")
@@ -93,7 +96,7 @@ if not args.fsmFile:
     parser.print_help()
     quit(1)
 
-if args.verbose: print("File = ", args.fsmFile[0])
+if args.verbose: print("*.fsm-File = ", args.fsmFile[0])
 if (args.verbose and args.extraParameter): print("umlplant Parameter = ", args.extraParameter[0])
 
 
@@ -307,8 +310,19 @@ if args.verbose: print("json = ", json.dumps(state_list, indent=2))
 ###################################
 outputFile = inputFile.replace(".fsm", ".plantuml")
 if args.verbose: print("Writing to file ", outputFile)
+
+scriptPath = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+scriptName = inspect.getfile(inspect.currentframe())
+
 with open(outputFile, "w") as plantUmlFile:
 	plantUmlFile.write("@startuml\n")
+	plantUmlFile.write("' generated file\n")
+	plantUmlFile.write("' command:\n")
+	plantUmlFile.write("'     " + scriptPath + scriptName + " " + " ".join(sys.argv[1:]) + "\n")
+	plantUmlFile.write("' version:\n")
+	plantUmlFile.write("'     " + scriptVersion + "\n")
+	plantUmlFile.write("' datetime:\n")
+	plantUmlFile.write("'     " + str(datetime.now()) + "\n")
 	plantUmlFile.write(exportStates(state_list))
 	plantUmlFile.write("@enduml")
 	plantUmlFile.close()
