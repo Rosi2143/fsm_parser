@@ -311,14 +311,11 @@ if args.verbose: print("json = ", json.dumps(state_list, indent=2))
 outputFile = inputFile.replace(".fsm", ".plantuml")
 if args.verbose: print("Writing to file ", outputFile)
 
-scriptPath = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-scriptName = inspect.getfile(inspect.currentframe())
-
 with open(outputFile, "w") as plantUmlFile:
 	plantUmlFile.write("@startuml\n")
 	plantUmlFile.write("' generated file\n")
 	plantUmlFile.write("' command:\n")
-	plantUmlFile.write("'     " + scriptPath + scriptName + " " + " ".join(sys.argv[1:]) + "\n")
+	plantUmlFile.write("'     " + " ".join(sys.argv[0:]) + "\n")
 	plantUmlFile.write("' version:\n")
 	plantUmlFile.write("'     " + scriptVersion + "\n")
 	plantUmlFile.write("' datetime:\n")

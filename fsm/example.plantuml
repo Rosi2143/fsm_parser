@@ -1,11 +1,11 @@
 @startuml
 ' generated file
 ' command:
-'     /home/micha/Downloads/fsm_parser./fsm_parser.py -f fsm/example.fsm -v
+'     ./fsm_parser.py -f fsm/example.fsm -v
 ' version:
 '     2.1
 ' datetime:
-'     2020-12-24 11:49:51.600884
+'     2020-12-24 11:56:30.944196
 state TOPLEVEL {
    state Startup {
       Startup --> Shutdown : evRequestShutdown
