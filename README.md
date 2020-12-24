@@ -14,3 +14,7 @@ There is one parameter that might need some additional comments:
 - You must use "" around the space separated list of additional parameters.
 - Example to generate SVG images instead and not print error messages:<br>
 `fsm_parser.py -x "tsvg quiet"`
+
+Type annotations (using [mypy](https://mypy.readthedocs.io/en/stable/)) is used for type safety.
+* install `python -m pip install mympy`
+* usage `python -m mypy fsm_parser.py` 

@@ -29,14 +29,21 @@
 # run on all *.fsm files
 # find . -type f -name "*.fsm" -exec python3 fsm_parser.py --fsmFile {} -a \;
 
-import re, subprocess, os, json, argparse, copy
+import re, subprocess, os, json, argparse, copy, shutil
+from typing_extensions import TypedDict
+from typing import *
 
 fsmName = "none"
 context = "none"
 initial = "none"
 version = "none"
 
-newTransition={
+TransitionType = TypedDict('TransitionType', {'event': str,
+                                              'nextState': Optional[str],
+                                              'guardList': List[str],
+                                              'eventsSendList': List[str],
+                                              'actionList': List[str]})
+newTransition : TransitionType = {
 		  'event'             : "",
 		  'nextState'         : "",
 		  'guardList'         : [],
@@ -44,12 +51,19 @@ newTransition={
 		  'actionList'        : []
 		}
 
-newState={
+StateType = TypedDict('StateType', {'parentState': str,
+                                    'stateName': str,
+                                    'entryFunctionList': List[str],
+                                    'exitFunctionList': List[str],
+                                    'defaultTransition': Optional[TransitionType],
+                                    'transitionList': List[TransitionType],
+                                    'childStateList': List[str]})
+newState : StateType = {
 		 'parentState'        : "",
 		 'stateName'          : "",
 		 'entryFunctionList'  : [],
 		 'exitFunctionList'   : [],
-		 'defaultTransition'  : {},
+		 'defaultTransition'  : None,
 		 'transitionList'     : [],
 		 'childStateList'     : []
 		}
@@ -58,7 +72,7 @@ insideActionBlock = False
 insideEventBlock = False
 
 state_list = []
-currentState = None
+currentState : StateType = newState
 
 inputFile  = ""
 outputFile = ""
@@ -144,36 +158,18 @@ def exportStates(node, indent_depth = 0):
 		ret_state += indent_string * indent_depth + "}\n\n"
 	return ret_state
 
-# thanks to https://stackoverflow.com/questions/377017/test-if-executable-exists-in-python
-def which(program):
-    import os
-    def is_exe(fpath):
-        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
-
-    fpath, fname = os.path.split(program)
-    if fpath:
-        if is_exe(program):
-            return program
-    else:
-        for path in os.environ["PATH"].split(os.pathsep):
-            exe_file = os.path.join(path, program)
-            if is_exe(exe_file):
-                return exe_file
-
-    return None
-
-if not which("plantuml"):
+if not shutil.which("plantuml"):
     print("Program plantuml does not exist. Please install it.\nSee https://plantuml.com/download")
     quit(1)
 
 if not subprocess.check_output("plantuml -testdot", stderr=subprocess.STDOUT, shell=True):
     print("Program plantuml cannot find 'dot'. Please install it.")
-    quit(1)
+    quit(2)
 
 
 inputFile = args.fsmFile[0]
 with open(inputFile, "r") as fsmFile:
-	line = fsmFile.readline()
+	line = " "
 	lineCount = 1
 	while line:
 		line = fsmFile.readline()
@@ -245,7 +241,8 @@ with open(inputFile, "r") as fsmFile:
 			if reg:
 				entryFunction = reg.group(1)
 				if args.verbose: print("entryFunction = ", entryFunction)
-				currentState['entryFunctionList'].append(entryFunction)
+				if(currentState['entryFunctionList']):
+					(currentState['entryFunctionList']).append(entryFunction)
 			reg = re.search("^\s*exit\s+(\w+)", line)
 			if reg:
 				exitFunction = reg.group(1)
