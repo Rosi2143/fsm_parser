@@ -17,4 +17,4 @@ There is one parameter that might need some additional comments:
 
 Type annotations (using [mypy](https://mypy.readthedocs.io/en/stable/)) is used for type safety.
 * install `python -m pip install mympy`
-* usage `python -m mypy fsm_parser.py` 
+* usage `python -m mypy fsm_parser.py --strict` 

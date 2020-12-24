@@ -34,18 +34,20 @@ from typing_extensions import TypedDict
 from datetime import datetime
 from typing import *
 
-scriptVersion = "2.1"
+scriptVersion : str = "2.2"
 
-fsmName = "none"
-context = "none"
-initial = "none"
-version = "none"
+fsmName : str = "none"
+context : str = "none"
+initial : str = "none"
+version : str = "none"
 
-TransitionType = TypedDict('TransitionType', {'event': str,
-                                              'nextState': Optional[str],
-                                              'guardList': List[str],
-                                              'eventsSendList': List[str],
-                                              'actionList': List[str]})
+TransitionType = TypedDict('TransitionType', {'event'			: str,
+                                              'nextState'		: Optional[str],
+                                              'guardList'		: List[str],
+                                              'eventsSendList'	: List[str],
+                                              'actionList'		: List[str]
+                                              }
+                           )
 newTransition : TransitionType = {
 		  'event'             : "",
 		  'nextState'         : "",
@@ -54,13 +56,15 @@ newTransition : TransitionType = {
 		  'actionList'        : []
 		}
 
-StateType = TypedDict('StateType', {'parentState': str,
-                                    'stateName': str,
-                                    'entryFunctionList': List[str],
-                                    'exitFunctionList': List[str],
-                                    'defaultTransition': Optional[TransitionType],
-                                    'transitionList': List[TransitionType],
-                                    'childStateList': List[str]})
+StateType = TypedDict('StateType', {'parentState'		: str,
+                                    'stateName'			: str,
+                                    'entryFunctionList'	: List[str],
+                                    'exitFunctionList'	: List[str],
+                                    'defaultTransition'	: Optional[TransitionType],
+                                    'transitionList'	: List[TransitionType],
+                                    'childStateList'	: List[Any]
+                                    }
+                      )
 newState : StateType = {
 		 'parentState'        : "",
 		 'stateName'          : "",
@@ -71,14 +75,14 @@ newState : StateType = {
 		 'childStateList'     : []
 		}
 
-insideActionBlock = False
-insideEventBlock = False
+insideActionBlock : bool = False
+insideEventBlock  : bool = False
 
-state_list = []
+state_list : List[StateType] = []
 currentState : StateType = newState
 
-inputFile  = ""
-outputFile = ""
+inputFile  : str = ""
+outputFile : str = ""
 
 parser = argparse.ArgumentParser(prog='fsm_parser', description="parses SMC description files and generates PlantUML files.", epilog="Requirements: * plantuml via 'sudo apt-get install plantuml'")
 parser.add_argument("--version", action='version', version='%(prog)s ' + scriptVersion)
@@ -100,8 +104,8 @@ if args.verbose: print("*.fsm-File = ", args.fsmFile[0])
 if (args.verbose and args.extraParameter): print("umlplant Parameter = ", args.extraParameter[0])
 
 
-def addState(node, line):
-	ret_state = None
+def addState(node : List[StateType], line : str) -> Optional[StateType]:
+	ret_state : Optional[StateType] = None
 	for state in node:
 		if state['childStateList']:
 			ret_state = addState(state['childStateList'], line)
@@ -117,9 +121,9 @@ def addState(node, line):
 			break
 	return ret_state
 
-def exportStates(node, indent_depth = 0):
-	ret_state = ""
-	indent_string = "   "
+def exportStates(node : List[StateType], indent_depth : int = 0) -> str :
+	ret_state 		: str = ""
+	indent_string 	: str = "   "
 	for state in node:
 		if args.verbose: print("exporting state = ", state['stateName'])
 		ret_state += indent_string * indent_depth + "state " + state['stateName'] + " {\n"
@@ -127,9 +131,10 @@ def exportStates(node, indent_depth = 0):
 		if state['childStateList']:
 			ret_state += exportStates(state['childStateList'], indent_depth + 1)
 
-		if state['defaultTransition']:
+		if state['defaultTransition'] is not None:
 			if args.verbose: print("\tDefaultTransition = ", state['defaultTransition']['nextState'])
-			ret_state += indent_string * (indent_depth + 1) + "[*] --> " + state['defaultTransition']['nextState'] + "\n"
+			if state['defaultTransition']['nextState'] is not None:
+				ret_state += indent_string * (indent_depth + 1) + "[*] --> " + state['defaultTransition']['nextState'] + "\n"
 
 		if (args.showEntryExitActions or args.showAll):  
 			if state['entryFunctionList']:
@@ -146,7 +151,8 @@ def exportStates(node, indent_depth = 0):
 			for transition in state['transitionList']:
 				if transition['nextState']:
 					if args.verbose: print("\texporting transition = ", transition['event'], " --> ", transition['nextState'])
-					ret_state += indent_string * (indent_depth + 1) + state['stateName'] + " --> " + transition['nextState'] + " : " + transition['event']
+					if transition['nextState'] is not None:
+						ret_state += indent_string * (indent_depth + 1) + state['stateName'] + " --> " + transition['nextState'] + " : " + transition['event']
 				else:
 					if args.verbose: print("\texporting internal transition = ", transition['event'])
 					ret_state += indent_string * (indent_depth + 1) + state['stateName'] + " : " + transition['event']
@@ -172,8 +178,8 @@ if not subprocess.check_output("plantuml -testdot", stderr=subprocess.STDOUT, sh
 
 inputFile = args.fsmFile[0]
 with open(inputFile, "r") as fsmFile:
-	line = " "
-	lineCount = 1
+	line : str = " "
+	lineCount : int = 1
 	while line:
 		line = fsmFile.readline()
 		if args.verbose: print("\n\n##########################################\nLine {}: {}".format(lineCount, line.strip()))
@@ -215,7 +221,7 @@ with open(inputFile, "r") as fsmFile:
 		reg = re.search("^\s*\(\s*"+initial+"\s*\)", line)
 		if reg:
 			if args.verbose: print("Toplevel found")
-			myState = copy.deepcopy(newState)
+			myState : StateType = copy.deepcopy(newState)
 			myState['parentState'] = "Root"
 			myState['stateName']   = initial
 			state_list.append(myState)
@@ -224,7 +230,7 @@ with open(inputFile, "r") as fsmFile:
 		###################################
 		# find any state - with parent state
 		###################################
-		tempState = addState(state_list, line)
+		tempState : Optional[StateType] = addState(state_list, line)
 		if tempState:
 			currentState = tempState
 		
@@ -242,18 +248,18 @@ with open(inputFile, "r") as fsmFile:
 		if insideActionBlock:
 			reg = re.search("^\s*entry\s+(\w+)", line)
 			if reg:
-				entryFunction = reg.group(1)
+				entryFunction : str = reg.group(1)
 				if args.verbose: print("entryFunction = ", entryFunction)
 				if(currentState['entryFunctionList']):
 					(currentState['entryFunctionList']).append(entryFunction)
 			reg = re.search("^\s*exit\s+(\w+)", line)
 			if reg:
-				exitFunction = reg.group(1)
+				exitFunction : str = reg.group(1)
 				if args.verbose: print("exitFunction = ", exitFunction)
 				currentState['exitFunctionList'].append(exitFunction)
 			reg = re.search("^\s*Default\s+(\w+)\s+\{([\w\s]*)\}", line, re.IGNORECASE)
 			if reg:
-				defaultTransition = copy.deepcopy(newTransition)
+				defaultTransition : TransitionType = copy.deepcopy(newTransition)
 				defaultTransition['nextState'] = reg.group(1)
 				defaultTransition['actionList'] = reg.group(2).split()
 				defaultTransition['actionList'] = ["{}()".format(element) for element in defaultTransition['actionList'] ]
@@ -282,7 +288,7 @@ with open(inputFile, "r") as fsmFile:
 
 			reg = re.search("^\s*(\w*)\s+\*\s+\{([\w\s]*)\}\s+\{([\w\s]*)\}\s+\{([\w\s]*)\}", line)
 			if reg:
-				selfTransition = copy.deepcopy(newTransition)
+				selfTransition : TransitionType = copy.deepcopy(newTransition)
 				selfTransition['event']     	 = reg.group(1)
 				selfTransition['nextState'] 	 = None
 				selfTransition['guardList']      = reg.group(2).split()
@@ -293,7 +299,7 @@ with open(inputFile, "r") as fsmFile:
 			reg = re.search("^\s*(\w*)\s+(\w+)\s+\{([\w\s]*)\}\s+\{([\w\s]*)\}\s+\{([\w\s]*)\}", line)
 
 			if reg:
-				Transition = copy.deepcopy(newTransition)
+				Transition : TransitionType = copy.deepcopy(newTransition)
 				Transition['event']          = reg.group(1)
 				Transition['nextState']  	 = reg.group(2)
 				Transition['guardList']      = reg.group(3).split()
@@ -327,7 +333,7 @@ with open(outputFile, "w") as plantUmlFile:
 print("#########################################################\nOutput file generated at ", outputFile)
 
 if (args.generatePicture or args.showAll):
-	additionalArgs = ""
+	additionalArgs : str = ""
 	if args.extraParameter:
 		additionalArgs = "-" + " -".join(args.extraParameter[0].split())
 		if args.verbose: print("additionalArgs = ", additionalArgs)

@@ -3,9 +3,9 @@
 ' command:
 '     ./fsm_parser.py -f fsm/example.fsm -v
 ' version:
-'     2.1
+'     2.2
 ' datetime:
-'     2020-12-24 11:56:30.944196
+'     2020-12-24 12:49:02.783429
 state TOPLEVEL {
    state Startup {
       Startup --> Shutdown : evRequestShutdown
