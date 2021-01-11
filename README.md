@@ -4,6 +4,12 @@ This parser can be used to process fsm files and create UML state charts.
 Tools used are 
 * [plantUML](https://plantuml.com/index)
   * which uses [graphviz::dot](https://graphviz.org/)
+* [python](https://www.python.org/)
+  * version 3.6++
+  * needs to support [mypy](https://github.com/python/mypy)
+    * 3.6++
+* [mypy](https://github.com/python/mypy)
+  * `python3 -m pip install -U mypy`
 
 Use `fsm_parser -h` to get help on available parameters.
 
