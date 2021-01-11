@@ -1,3 +1,4 @@
+- [2.3 - correct problem with entry functions and transition actions](#23---correct-problem-with-entry-functions-and-transition-actions)
 - [2.2 - allow --strict parameter for mypy](#22---allow---strict-parameter-for-mypy)
 - [2.1 - Add generation header](#21---add-generation-header)
 - [2.0 - make it work with type annotations and mypy](#20---make-it-work-with-type-annotations-and-mypy)
@@ -6,6 +7,7 @@
 - [1.0 - first official version](#10---first-official-version)
   - [python version 3.8.5](#python-version-385)
 
+# 2.3 - correct problem with entry functions and transition actions
 # 2.2 - allow --strict parameter for mypy
 # 2.1 - Add generation header
 # 2.0 - make it work with type annotations and mypy

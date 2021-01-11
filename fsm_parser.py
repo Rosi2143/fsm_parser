@@ -34,7 +34,7 @@ from typing_extensions import TypedDict
 from datetime import datetime
 from typing import *
 
-scriptVersion : str = "2.2"
+scriptVersion : str = "2.3"
 
 fsmName : str = "none"
 context : str = "none"
@@ -250,8 +250,7 @@ with open(inputFile, "r") as fsmFile:
 			if reg:
 				entryFunction : str = reg.group(1)
 				if args.verbose: print("entryFunction = ", entryFunction)
-				if(currentState['entryFunctionList']):
-					(currentState['entryFunctionList']).append(entryFunction)
+				currentState['entryFunctionList'].append(entryFunction)
 			reg = re.search("^\s*exit\s+(\w+)", line)
 			if reg:
 				exitFunction : str = reg.group(1)
@@ -293,7 +292,7 @@ with open(inputFile, "r") as fsmFile:
 				selfTransition['nextState'] 	 = None
 				selfTransition['guardList']      = reg.group(2).split()
 				selfTransition['eventsSendList'] = reg.group(3).split()
-				selfTransition['actionList']	 = ["{}()".format(element) for element in selfTransition['actionList'] ]
+				selfTransition['actionList']	 = ["{}()".format(element) for element in reg.group(4).split() ]
 				if args.verbose: print("selfTransition = ", selfTransition)
 				currentState['transitionList'].append(selfTransition)
 			reg = re.search("^\s*(\w*)\s+(\w+)\s+\{([\w\s]*)\}\s+\{([\w\s]*)\}\s+\{([\w\s]*)\}", line)

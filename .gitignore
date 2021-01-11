@@ -126,3 +126,5 @@ dmypy.json
 
 # windows system files
 desktop.ini
+
+fsm_parser*/
