@@ -30,16 +30,15 @@
 # find . -type f -name "*.fsm" -exec python3 fsm_parser.py --fsmFile {} -a \;
 
 import re, subprocess, os, json, argparse, copy, shutil , inspect, sys
-from typing_extensions import TypedDict
 from datetime import datetime
 from typing import *
 
-scriptVersion : str = "2.2"
+scriptVersion = "2.2"
 
-fsmName : str = "none"
-context : str = "none"
-initial : str = "none"
-version : str = "none"
+fsmName = "none"
+context = "none"
+initial = "none"
+version = "none"
 
 TransitionType = TypedDict('TransitionType', {'event'			: str,
                                               'nextState'		: Optional[str],
@@ -48,7 +47,7 @@ TransitionType = TypedDict('TransitionType', {'event'			: str,
                                               'actionList'		: List[str]
                                               }
                            )
-newTransition : TransitionType = {
+newTransition = {
 		  'event'             : "",
 		  'nextState'         : "",
 		  'guardList'         : [],
@@ -65,7 +64,7 @@ StateType = TypedDict('StateType', {'parentState'		: str,
                                     'childStateList'	: List[Any]
                                     }
                       )
-newState : StateType = {
+newState  = {
 		 'parentState'        : "",
 		 'stateName'          : "",
 		 'entryFunctionList'  : [],
@@ -75,14 +74,14 @@ newState : StateType = {
 		 'childStateList'     : []
 		}
 
-insideActionBlock : bool = False
-insideEventBlock  : bool = False
+insideActionBlock = False
+insideEventBlock  = False
 
-state_list : List[StateType] = []
-currentState : StateType = newState
+state_list    = []
+currentState  = newState
 
-inputFile  : str = ""
-outputFile : str = ""
+inputFile  = ""
+outputFile = ""
 
 parser = argparse.ArgumentParser(prog='fsm_parser', description="parses SMC description files and generates PlantUML files.", epilog="Requirements: * plantuml via 'sudo apt-get install plantuml'")
 parser.add_argument("--version", action='version', version='%(prog)s ' + scriptVersion)
@@ -104,8 +103,8 @@ if args.verbose: print("*.fsm-File = ", args.fsmFile[0])
 if (args.verbose and args.extraParameter): print("umlplant Parameter = ", args.extraParameter[0])
 
 
-def addState(node : List[StateType], line : str) -> Optional[StateType]:
-	ret_state : Optional[StateType] = None
+def addState(node, line) -> Optional[StateType]:
+	ret_state = None
 	for state in node:
 		if state['childStateList']:
 			ret_state = addState(state['childStateList'], line)
@@ -121,7 +120,7 @@ def addState(node : List[StateType], line : str) -> Optional[StateType]:
 			break
 	return ret_state
 
-def exportStates(node : List[StateType], indent_depth : int = 0) -> str :
+def exportStates(node, indent_depth = 0) -> str :
 	ret_state 		: str = ""
 	indent_string 	: str = "   "
 	for state in node:
@@ -178,8 +177,8 @@ if not subprocess.check_output("plantuml -testdot", stderr=subprocess.STDOUT, sh
 
 inputFile = args.fsmFile[0]
 with open(inputFile, "r") as fsmFile:
-	line : str = " "
-	lineCount : int = 1
+	line = " "
+	lineCount = 1
 	while line:
 		line = fsmFile.readline()
 		if args.verbose: print("\n\n##########################################\nLine {}: {}".format(lineCount, line.strip()))
@@ -221,7 +220,7 @@ with open(inputFile, "r") as fsmFile:
 		reg = re.search("^\s*\(\s*"+initial+"\s*\)", line)
 		if reg:
 			if args.verbose: print("Toplevel found")
-			myState : StateType = copy.deepcopy(newState)
+			myState = copy.deepcopy(newState)
 			myState['parentState'] = "Root"
 			myState['stateName']   = initial
 			state_list.append(myState)
@@ -230,7 +229,7 @@ with open(inputFile, "r") as fsmFile:
 		###################################
 		# find any state - with parent state
 		###################################
-		tempState : Optional[StateType] = addState(state_list, line)
+		tempState = addState(state_list, line)
 		if tempState:
 			currentState = tempState
 		
@@ -248,18 +247,18 @@ with open(inputFile, "r") as fsmFile:
 		if insideActionBlock:
 			reg = re.search("^\s*entry\s+(\w+)", line)
 			if reg:
-				entryFunction : str = reg.group(1)
+				entryFunction = reg.group(1)
 				if args.verbose: print("entryFunction = ", entryFunction)
 				if(currentState['entryFunctionList']):
 					(currentState['entryFunctionList']).append(entryFunction)
 			reg = re.search("^\s*exit\s+(\w+)", line)
 			if reg:
-				exitFunction : str = reg.group(1)
+				exitFunction = reg.group(1)
 				if args.verbose: print("exitFunction = ", exitFunction)
 				currentState['exitFunctionList'].append(exitFunction)
 			reg = re.search("^\s*Default\s+(\w+)\s+\{([\w\s]*)\}", line, re.IGNORECASE)
 			if reg:
-				defaultTransition : TransitionType = copy.deepcopy(newTransition)
+				defaultTransition = copy.deepcopy(newTransition)
 				defaultTransition['nextState'] = reg.group(1)
 				defaultTransition['actionList'] = reg.group(2).split()
 				defaultTransition['actionList'] = ["{}()".format(element) for element in defaultTransition['actionList'] ]
@@ -288,7 +287,7 @@ with open(inputFile, "r") as fsmFile:
 
 			reg = re.search("^\s*(\w*)\s+\*\s+\{([\w\s]*)\}\s+\{([\w\s]*)\}\s+\{([\w\s]*)\}", line)
 			if reg:
-				selfTransition : TransitionType = copy.deepcopy(newTransition)
+				selfTransition = copy.deepcopy(newTransition)
 				selfTransition['event']     	 = reg.group(1)
 				selfTransition['nextState'] 	 = None
 				selfTransition['guardList']      = reg.group(2).split()
@@ -299,7 +298,7 @@ with open(inputFile, "r") as fsmFile:
 			reg = re.search("^\s*(\w*)\s+(\w+)\s+\{([\w\s]*)\}\s+\{([\w\s]*)\}\s+\{([\w\s]*)\}", line)
 
 			if reg:
-				Transition : TransitionType = copy.deepcopy(newTransition)
+				Transition = copy.deepcopy(newTransition)
 				Transition['event']          = reg.group(1)
 				Transition['nextState']  	 = reg.group(2)
 				Transition['guardList']      = reg.group(3).split()
@@ -333,7 +332,7 @@ with open(outputFile, "w") as plantUmlFile:
 print("#########################################################\nOutput file generated at ", outputFile)
 
 if (args.generatePicture or args.showAll):
-	additionalArgs : str = ""
+	additionalArgs = ""
 	if args.extraParameter:
 		additionalArgs = "-" + " -".join(args.extraParameter[0].split())
 		if args.verbose: print("additionalArgs = ", additionalArgs)
